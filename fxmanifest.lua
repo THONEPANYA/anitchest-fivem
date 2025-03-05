@@ -1,7 +1,7 @@
 fx_version 'cerulean'
 game 'gta5'
 
-author 'เจ้าอ้วงน้อย'
+author 'Chao Uang Noi'
 description 'Anti-Cheat FiveM'
 version '1.0.0'
 
