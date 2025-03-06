@@ -7,13 +7,21 @@ local height = GetEntityHeightAboveGround(playerPed)
 local lastHealth = nill
 local health = GetEntityHealth(playerPed)
 local _, currentAmmo = GetAmmoInClip(playerPed, GetSelectedPedWeapon(playerPed))
+local newHealth = GetEntityHealth(playerPed)
 
+--  GodMod / Speed Hack Detected
 Citizen.CreateThread(function ()
     while true do
-        Citizem.Wait(30000)
+        Citizem.Wait(500)
 
-        if health > 300 then
-            TriggerEvent("anitcheat:ban", "God Mod Detected!")
+        if lastHealth then
+            if lastHealth > health and (lastHealth - health) > 0 then
+                Citizen.Wait(500)
+
+                if newHealth >= lastHealth then
+                    TriggerServerEvent("anticheat:ban", "God Mode Detected (No HP Reduction)")
+                end
+            end
         end
 
         if speed > 300 then
@@ -34,6 +42,7 @@ Citizen.CreateThread(function ()
     
 end)
 
+-- Teleport Hack Detected
 Cititzen.CreateThread(function ()
     while true do
     Cititzen.Wait(10000)
@@ -60,6 +69,7 @@ Citizen.CreateThread(function()
     end
 end)
 
+-- One Hit Kill Detected
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(10000)
@@ -72,6 +82,7 @@ Citizen.CreateThread(function()
     end
 end)
 
+-- Infinite Ammo Detected
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(1000)

@@ -77,8 +77,7 @@ end
 RegisterServerEvent("anticheat:ban")
 AddEventHandler("anticheat:ban", function(reason)
 
-    print("[Anti-Cheat] " .. GetPlayerName(src) .. " Banned: " .. reason)
-    BanPlayer(steamIdentifier, reason)
-    DropPlayer(src, "You Got Permanent Ban From Server! Reson: " .. reason)
+    print("[Anti-Cheat] " .. GetPlayerName(src) .. " ถูกแบนด้วยเหตุผล: " .. reason)
+    DropPlayer(src, "คุณถูกแบนจากเซิร์ฟเวอร์ เนื่องจาก: " .. reason)
 end)
 
