@@ -1,94 +1,129 @@
-local playerPed = PlayerPedId()
-local health = GetEntityHealth(playerPed)
-local speed = GetEntitySpeed(playerPed) * 3.6
-local lastCoords = nill
-local coords = GetEntityCoords(playerPed)
-local height = GetEntityHeightAboveGround(playerPed)
-local lastHealth = nill
-local health = GetEntityHealth(playerPed)
-local _, currentAmmo = GetAmmoInClip(playerPed, GetSelectedPedWeapon(playerPed))
-local newHealth = GetEntityHealth(playerPed)
+local lastHealth = nil
+local lastArmor = nil
 
---  GodMod / Speed Hack Detected
 Citizen.CreateThread(function ()
     while true do
-        Citizem.Wait(500)
+        Citizen.Wait(500)
+        local playerPed = PlayerPedId()
+        local health = GetEntityHealth(playerPed)
+        local armor = GetPedArmour(playerPed)
 
-        if lastHealth then
-            if lastHealth > health and (lastHealth - health) > 0 then
-                Citizen.Wait(500)
+        if lastHealth and lastHealth < health then
+            TriggerServerEvent("anticheat:ban", "Illegal Health Regeneration Detected")
+        end
 
-                if newHealth >= lastHealth then
-                    TriggerServerEvent("anticheat:ban", "God Mode Detected (No HP Reduction)")
+        if lastArmor and lastArmor < armor then
+            TriggerServerEvent("anticheat:ban", "Illegal Armor Boost Detected")
+        end
+
+        lastHealth = health
+        lastArmor = armor
+
+    end
+end)
+
+local speedHistory = {}
+
+Citizen.CreateThread(function ()
+    while true do
+        Citizen.Wait(1000)
+        local playerPed = PlayerPedId()
+        local speed = GetEntitySpeed(playerPed) * 3.6
+
+        table.insert(speedHistory, speed)
+        if #speedHistory > 5 then
+            table.remove(speedHistory, 1)
+        end
+
+        local totalSpeed = 0
+        for _, s in ipars(speedHistory) do
+            totalSpeed = totalSpeed + s
+        end
+
+        local avgSpeed = totalSpeed / #speedHistory
+
+        if avhSpeed > 180 then
+            TriggerServerEvent("anticheat:ban", "Speed Hack Detected")
+        end
+    end
+end)
+
+Citizen.CreateThread(function ()
+    while true do
+        Citizen.Wait(5000)
+        for key, value in pairs(_G) do
+            if type(value) == "function" then
+                local info = debug.getinfo(value, "S")
+                if info and not string.find(info.source, "@resources/") then
+                    TriggerServerEvent("anticheat:ban", "Lua Injection Detected")
                 end
             end
         end
-
-        if speed > 300 then
-            TriggerEvent("anitcheat:ban", "Speed Hack Detected!")
-        end
-
-        for _, weapon in ipairs(Config.Weapons) do
-            if HasPedGotWeapon(playerPed, weapon, false) then
-                if not weaponList[weapon] then
-                    weaponList[weapon] = true
-                    TriggerServerEvent("anitcheat:ban", "Illegal Weapon Detected: " .. weapon)
-                end
-            end
-        end
-
-
     end
     
 end)
 
--- Teleport Hack Detected
-Cititzen.CreateThread(function ()
+Citizen.CreateThread(function ()
     while true do
-    Cititzen.Wait(10000)
+        Citizen.Wait(500)
+        local playerPed = PlayerPedId()
+        local height = GetEntityHeightAboveGround(playerPed)
 
-        if lastCoords then
-            local distance = #(coords - lastCoords)
-            if distance > 500 then
-                TriggerServerEvent("anticheat:ban", "Teleport Hack Detected!")
-            end
-            
-        end
-        lastCoords = coords
-
-    end
-end)
-
-Citizen.CreateThread(function()
-    while true do
-        Citizen.Wait(1000)
-
-        if height > 10.0 and not IsPedInAnyVehicle(playerPed, false) then
-            TriggerServerEvent("anticheat:ban", "Fly Hack Detected!")
+        if height > 15.0 and not IsPedInAnyVehicle(playerPed, false) then
+            TriggerServerEvent("anticheat:ban", "Fly Hack Detected")
         end
     end
 end)
 
--- One Hit Kill Detected
+local lastHealth = nil
+
 Citizen.CreateThread(function()
     while true do
-        Citizen.Wait(10000)
+        Citizen.Wait(500)
+        local playerPed = PlayerPedId()
+        local health = GetEntityHealth(playerPed)
+        local _, currentAmmo = GetAmmoInClip(playerPed, GetSelectedPedWeapon(playerPed))
 
         if lastHealth and (lastHealth - health) > 100 then
-            TriggerServerEvent("anticheat:ban", "One-Hit Kill Detected!")
+            TriggerServerEvent("anticheat:ban", "One-Hit Kill Detected")
+        end
+
+        if currentAmmo > 9999 then
+            TriggerServerEvent("anticheat:ban", "Infinite Ammo Detected")
         end
 
         lastHealth = health
     end
 end)
 
--- Infinite Ammo Detected
+RegisterServerEvent("anticheat:checkMoney")
+AddEventHandler("anticheat:checkMoney", function()
+    local src = source
+    local xPlayer = ESX.GetPlayerFromId(src)
+    
+    if xPlayer then
+        local money = xPlayer.getMoney()
+        local bank = xPlayer.getAccount('bank').money
+        
+        if money > 10000000 or bank > 10000000 then
+            TriggerServerEvent("anticheat:ban", "Money Hack Detected")
+        end
+    end
+end)
+
+local blockedNatives = {
+    "GiveWeaponToPed",
+    "SetEntityCoords",
+    "SetPedInfiniteAmmo"
+}
+
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(1000)
-    
-        if currentAmmo > 9999 then
-            TriggerServerEvent("anticheat:ban", "Infinite Ammo Detected!")
+        for _, native in ipairs(blockedNatives) do
+            if Citizen.InvokeNative(GetHashKey(native)) then
+                TriggerServerEvent("anticheat:ban", "Restricted Native Function Used: " .. native)
+            end
         end
     end
 end)
